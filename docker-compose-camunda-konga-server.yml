@@ -55,7 +55,7 @@ services:
     environment:
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_ADMIN_LISTEN: '0.0.0.0:8001'
       KONG_CASSANDRA_CONTACT_POINTS: db
       KONG_DATABASE: postgres
       KONG_PG_DATABASE: kong
@@ -88,12 +88,12 @@ services:
         condition: on-failure
     
   db:
-    container_name: kong-postgres
     image: postgres:9.5
     environment:
       POSTGRES_DB: kong
       POSTGRES_USER: kong
       POSTGRES_PASSWORD: kong
+    
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "kong"]
       interval: 30s
@@ -145,23 +145,33 @@ services:
 
   camunda-postgres:
     container_name: camunda  
+    image: camunda/camunda-bpm-platform:${DISTRO:-latest}
     restart: always    
     networks:
       - letsencrypt    
-    build:
-      context: .
-      dockerfile: Dockerfile      
     environment:
         DB_DRIVER: org.postgresql.Driver
-        DB_URL: jdbc:postgresql://private-camunda-postgres-do-user-5070717-0.b.db.ondigitalocean.com:25060/camunda
+        DB_URL: jdbc:postgresql://postgres:5432/camunda
         DB_USERNAME: camunda
-        DB_PASSWORD: AVNS_H3hc8rUXf-FhBJ-46Le
+        DB_PASSWORD: camunda
         DEBUG: "true"        
         PORT: 8080
         VIRTUAL_PORT: 8080
         VIRTUAL_HOST: camunda.over9k.com.br
         LETSENCRYPT_HOST: camunda.over9k.com.br
         LETSENCRYPT_EMAIL: admin+camunda@over9k.com.br
+    depends_on:
+        - postgres
     ports:
         - "7070:8080"
         - "7000:8000"            
+
+  postgres:
+    image: postgres:9.6
+    environment:
+        - POSTGRES_USER=camunda
+        - POSTGRES_PASSWORD=camunda
+    ports:
+        - "5433:5432"
+    networks:
+      - letsencrypt
