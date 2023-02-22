@@ -151,6 +151,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile      
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
         DB_DRIVER: org.postgresql.Driver
         DB_URL: jdbc:postgresql://private-camunda-postgres-do-user-5070717-0.b.db.ondigitalocean.com:25060/camunda
